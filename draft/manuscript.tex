@@ -24,66 +24,72 @@
 
 \begin{document}
 
-\title{用量子神经网络态来求解多体哈密顿量的基态物理}
-\author{Qamber}
+\title{用神经网络量子态来求解多体哈密顿量的基态物理}
+\author{幾(Qamber)}
 \date{\today}
 \maketitle
 
 \tableofcontents
 \newpage
 
-\section{简介}
 
-在此, 我们将介绍量子神经网络态(Quantum Neural Network State)的概念, 并且详细说明如何用其来求解量子多体哈密顿量的基态问题. 
+\section{神经网络量子态}
+
+在这一节, 我们将介绍神经网络量子态(Neural Network Quantum State)~\cite{Carleo_2017}的概念, 并且详细说明如何用其来求解量子多体哈密顿量的基态问题.
 
 对于一个局域(local)的多体哈密顿量$H$, 我们一般可以将其分解为求和的形式: 
 \[ H = \sum_{i} h_{i} + \sum_{i,j} h_{ij} + \cdots\,, \]
-其中, $h_{i}$仅涉及第$i$个自由度(单体项), $h_{ij}$仅涉及第$i,j$个自由度(两体项), 其它项以此类推. 
+其中, $h_{i}$仅涉及第$i$个自由度(单体项), $h_{ij}$仅涉及第$i,j$个自由度(两体项), 其它项依此类推. 
 为了简单起见, 我们考虑一个有$N$个$1/2$自旋的量子系统, 其量子态在计算基矢($\sigma_{i}^{z}$表象)下可以写为:
 \[ \lvert \Psi \qket = \sum_{\vec{\sigma}} \Psi(\vec{\sigma}) \lvert \vec{\sigma} \qket\,. \]
 为了求解体系的基态, 我们可以采用变分原理, 即先提出波函数的一个拟设, 再通过调节其参数来寻找基态. 
-在这里, 我们采用量子神经网络来编码一个量子态的波函数, 为了简单起见, 我们仅考虑用限制玻尔兹曼机(RBM)来完成这个任务, 
+在这里, 我们采用神经网络来编码一个量子态的波函数, 为了简单起见, 我们仅考虑用限制玻尔兹曼机(RBM)来完成这个任务, 
 \begin{align}
 \Psi(\vec{\sigma}) & = \sum_{\vec{\chi}} \exp{\Big(\sum_{i}b_{i}\chi_{i}+\sum_{j}a_{j}\sigma_{j}+\sum_{i,j}W_{ij}\chi_{i}\sigma_{j}\Big)} \nonumber \\
-& = \exp{\Big(\sum_{j}a_{j}\sigma_{j}\Big)} \prod_{i} 2 \cosh{\Big(b_{i}+\sum_{j}W_{ij}\sigma_{j}\Big)}\,,
+& = \exp{\Big(\sum_{j}a_{j}\sigma_{j}\Big)} \prod_{i} 2 \cosh{\Big(b_{i}+\sum_{j'}W_{ij'}\sigma_{j'}\Big)}\,,
 \end{align}
-此处的网络参数$\{\textbf{a},\textbf{b},\textbf{W}\}$均为复数并且为了准确地编码半整数的自旋, 我们选取$\sigma_{j},\chi_{i}$的取值为$\{1,-1\}$, 分别对应了在$z$方向朝上与朝下的自旋. 
-需要注意的是, 在这里我们还舍弃了一个归一化的系数, 事实上, 这个归一化的系数并不会参与到后续的操作中.
+为了能够编码波函数的振幅与幅角, 此处的网络参数$\{\textbf{a},\textbf{b},\textbf{W}\}$均为复数并且为了准确地编码半整数的自旋, 我们选取$\sigma_{j},\chi_{i}$的取值为$\{1,-1\}$, 分别对应了在$z$方向朝上与朝下的自旋. 
+需要注意的是, 在这里我们还省略了一个归一化的系数, 事实上, 这个归一化的系数并不会参与到后续的操作中, 
+物理量的计算和参数的更新所涉及到的采样只需要知道不同自旋构型间的相对权重, 归一化系数是自然会被消掉的. 
 
-\section{物理量的计算}
 
-首先, 我们需要知道如何从量子神经网络态中提取我们需要的物理量. 
-考虑一个算符$\mathcal{\hat{O}}$ (不一定要求厄米性), 我们计算其在量子态$\lvert\Psi\qket$下的期望值:
+\section{物理量的计算: 变分蒙特卡洛采样}
+
+首先, 我们需要知道如何从神经网络量子态中提取我们需要的物理量. 
+考虑一个算符$\mathcal{\hat{O}}$ (不一定要求厄米性), 我们计算其在量子态$\lvert\Psi\qket$下的期望值(不一定为实数):
 \[ \qbar\mathcal{\hat{O}}\qket = \frac{\qbar\Psi\vert\hat{\mathcal{O}}\vert\Psi\qket}{\qbar\Psi\vert\Psi\qket} = \sum_{\vec{\sigma}} {\color{red}{\frac{\lvert\Psi(\vec{\sigma})\rvert^2}{\sum_{\vec{\sigma}''}\lvert\Psi(\vec{\sigma}'')\rvert^{2}}}} {\color{cyan}{\sum_{\vec{\sigma}'}\frac{\Psi(\vec{\sigma}')}{\Psi(\vec{\sigma})} \qbar\vec{\sigma}\vert\hat{\mathcal{O}}\vert\vec{\sigma}'\qket}}\,. \]
 我们引入标记
 \[ \mathcal{O}_{\rm loc}(\vec{\sigma}) = \sum_{\vec{\sigma}'}\frac{\Psi(\vec{\sigma}')}{\Psi(\vec{\sigma})} \qbar\vec{\sigma}\vert\hat{\mathcal{O}}\vert\vec{\sigma}'\qket = \frac{\qbar\vec{\sigma}\rvert\hat{\mathcal{O}}\lvert\Psi\qket}{\qbar\vec{\sigma}\vert\Psi\qket}\,, \]
 则上述的期望值表达式可以化简为:
-\[ \qbar\hat{\mathcal{O}}\qket = \qbar\mathcal{O}_{\rm loc}(\vec{\sigma})\qket_{P}\,, \]
-式中, $\qbar\cdots\qket_{P}$代表按相对概率分布$\lvert\Psi(\vec{\sigma})\rvert^2$取平均. 
+\[ \qbar\hat{\mathcal{O}}\qket = \qbar\mathcal{O}_{\rm loc}(\vec{\sigma})\qket\,, \]
+式中, $\qbar\cdots\qket$代表按相对概率分布$\lvert\Psi(\vec{\sigma})\rvert^2$取平均. 
 这样一来, 我们就将物理量的计算(在$N$比较大的时候, 直接的计算是不可能的)转换成了一个依概率采样的问题. 
 显然, 这样的一个采样问题是我们所熟悉的, 我们从某个自旋构型($\vec{\sigma}_{\rm old}$)出发, 随机选取一个自旋将其反转, 从而得到一个新的自旋构型($\vec{\sigma}_{\rm new}$), 接着以概率$\min{(1, \lvert\Psi(\vec{\sigma}_{\rm new})\rvert^{2}/\lvert\Psi(\vec{\sigma}_{\rm old})\rvert^{2})}$来接受这个新构型. 
-通过这种采样方法, 我们可以得到一个满足相对概率分布$\lvert\Psi(\vec{\sigma})\rvert^2$的自旋构型集$\{\vec{\sigma}\}$, 现在的关键是对其中的每个$\vec{\sigma}$计算对应的局部量$\mathcal{O}_{\rm loc}(\vec{\sigma})$. 
+通过这种采样方法, 我们可以得到一个满足相对概率分布$\lvert\Psi(\vec{\sigma})\rvert^2$的自旋构型集$\mathcal{S}=\{\vec{\sigma}\}$, 而算符$\hat{\mathcal{O}}$对量子态的期望, 就转化为了对采样得到的自旋构型集的平均, 
+\[ \qbar\hat{\mathcal{O}}\qket \approx \frac{1}{\lvert\mathcal{S}\rvert} \sum_{\vec{\sigma}\in\mathcal{S}} \mathcal{O}_{\rm loc}(\vec{\sigma})\,. \]
+现在的关键是对其中的每个$\vec{\sigma}$计算对应的局部量$\mathcal{O}_{\rm loc}(\vec{\sigma})$. 
 单纯看$\mathcal{O}_{\rm loc}(\vec{\sigma})$的定义, 我们会以为它将涉及非常巨大的计算(毕竟需要遍历所有的构型$\vec{\sigma}'$). 
 虽然在理论上, 这是一个不可能完成的任务, 但是我们实际所考虑的多体物理问题往往会大大简化这里的计算, 从而保证这个计算的可行性. 
 一般而言, 我们所考虑的算符$\hat{\mathcal{O}}$与我们的哈密顿量有类似的局域性, 即可以按照所作用的自旋自由度进行分解:
 \[ \hat{\mathcal{O}} = \sum_{i} \hat{o}_{i} + \sum_{i,j} \hat{o}_{ij} + \cdots\,. \]
 这样一来, 局部量的计算可以分解为:
 \[ \mathcal{O}_{\rm loc}(\vec{\sigma}) = \sum_{\vec{\sigma}'}\frac{\Psi(\vec{\sigma}')}{\Psi(\vec{\sigma})} \qbar\vec{\sigma}\vert\Big(\sum_{i} \hat{o}_{i} + \sum_{i,j} \hat{o}_{ij} + \cdots\Big)\vert\vec{\sigma}'\qket\,. \]
-显然, 如果我们所考虑的算符$\hat{\mathcal{O}}$仅涉及少体的相互作用(对相互作用的短程与否没有要求), 那么局部量$\mathcal{O}_{\rm loc}(\vec{\sigma})$就仅是一个对系统尺度$N$线性的计算问题. 
+显然, 如果我们所考虑的算符$\hat{\mathcal{O}}$仅涉及少体的相互作用(对相互作用的短程与否没有要求), 那么局部量$\mathcal{O}_{\rm loc}(\vec{\sigma})$的计算就仍然是一个资源消耗不大的问题. 
 
 接着, 我们需要来考虑如何优化变分波函数$\Psi(\vec{\sigma})$的问题. 
 为此, 我们采用随机重构(Stochastic Reconfiguration)的方法来确定变分波函数的参数更新规则. 
 
+
 \section{参数的更新规则: 随机重构方法}
 
-假设我们的试探量子态$\lvert\phi\qket$依赖于一组参数$\vec{\alpha}=\{\alpha_{1}, \cdots, \alpha_{p}\}$, 我们的目标是得到合适的参数值使得量子态$\lvert\phi\qket$尽可能地逼近哈密顿量$\hat{H}$的基态. 
-随机重构方法可以告诉我们应该如何逐步地来更新我们的参数来达到我们的目标. 
-实际上, 随机重构方法不过是应用了无穷小虚时演化($t=-i\epsilon$).
-如果我们对一个与基态不正交的量子态$\lvert\phi\qket$施加一个较长时间的虚时演化($t=-i\tau$), 我们可以期待得到的态会很接近基态, 
+假设我们的试探量子态$\lvert\phi\qket$依赖于一组参数$\vec{\alpha}=\{\alpha_{1}, \cdots, \alpha_{p}\}$, 我们的目标是得到合适的参数取值使得量子态$\lvert\phi\qket$尽可能地逼近哈密顿量$\hat{H}$的基态. 
+随机重构方法可以告诉我们应该如何逐步地更新我们的参数来达到我们的目标. 
+实际上, 随机重构方法不过是应用了无穷小虚时演化.
+如果我们对一个与基态不正交的量子态$\lvert\phi\qket$施加一个较长时间的虚时演化($t=-i\tau$), 我们可以预期得到的末态会很接近基态, 
 \[ \lim_{\tau\rightarrow\infty}e^{-\hat{H}\tau} \lvert\phi\qket \propto \lvert g\qket\,. \]
-随机重构方法不过是将这个较长的虚时演化拆解成了很多的短时演化(优势在于能做近似处理). 
-为此, 我们考虑将$\exp{(-\epsilon\hat{H})}\approx\mathbb{I}-\epsilon\hat{H}$作用在量子态$\lvert\phi\qket$上, 并且相应地改变参数使得更新后的量子态尽可能地符合虚时演化. 
-因此, 我们有
+随机重构方法不过是将这个较长的虚时演化拆解成了很多的短时演化(优势在于能做线性化近似处理, 而不用直接处理算符的指数运算). 
+为此, 我们考虑将$\exp{(-\epsilon\hat{H})}\approx\mathbb{I}-\epsilon\hat{H}$作用在量子态$\lvert\phi\qket$上, 并且相应地改变参数$\vec{\alpha}$使得更新后的量子态尽可能地符合虚时演化. 
+因此, 我们有($\lvert\phi\qket_{\vec{\alpha}+\delta\vec{\alpha}}\approx\lvert\phi\qket_{\vec{\alpha}}+\delta\vec{\alpha}\cdot\nabla_{\vec{\alpha}}\lvert\phi\qket$)
 \begin{align}
 (\mathbb{I}-\epsilon\hat{H})\lvert\phi\qket = \lvert\phi'\qket & = \delta\alpha_{0}\lvert\phi\qket + \sum_{k=1}^{p}\delta\alpha_{k}\frac{\partial\lvert\phi\qket}{\partial\alpha_{k}} \qquad{} \text{其中, $\delta\alpha_{0}\sim 1$, $\delta\alpha_{k}\sim\epsilon$} \nonumber \\
 & = \delta\alpha_{0}\lvert\phi\qket + \sum_{k=1}^{p} \delta\alpha_{k} \sum_{\vec{\sigma}} \frac{\partial\phi(\vec{\sigma})}{\partial\alpha_{k}} \lvert\vec{\sigma}\qket \nonumber \\
@@ -103,12 +109,15 @@
 通过定义矩阵$S$与向量$f$,
 \[ S_{kk'} \equiv \qbar\Delta_{\phi k}\Delta_{\phi k'}\qket - \qbar\Delta_{\phi k}\qket\qbar\Delta_{\phi k'}\qket \qquad{} \text{及\quad{}} f_{k} \equiv \qbar\hat{H}\qket\qbar\Delta_{\phi k}\qket - \qbar\Delta_{\phi k}\hat{H}\qket\,, \]
 参数的变化$\delta\alpha_{k}$可以写成一个紧凑的形式
-\[ \sum_{k'=1}^{p} S_{kk'} \delta\alpha_{k'} = \epsilon f_{k} \qquad{} \Rightarrow \qquad{} \delta\alpha = \epsilon S^{-1} f\,. \]
+\[ \sum_{k'=1}^{p} S_{kk'} \delta\alpha_{k'} = \epsilon f_{k} \qquad{} \Rightarrow \qquad{} \delta\vec{\alpha} = \epsilon S^{-1} f\,. \]
 因此, 参数的更新规则可以写为:
 \begin{equation}
-\alpha(n+1) \leftarrow \alpha(n) + \eta S^{-1}(n)f(n)\,,
+\vec{\alpha}(n+1) \leftarrow \vec{\alpha}(n) + \eta S^{-1}(n)f(n)\,,
 \end{equation}
-式中的$\eta$是学习率, $S^{-1}$是$S$的伪逆, 或者我们也可以在$S$的基础上再加入一个微小的单位矩阵来正规化(regularization)它. 
+式中的$\eta$是学习率, $S^{-1}$是$S$的伪逆, 并且我们在$S$的基础上再加入一个微小的单位矩阵来正规化(regularization)它. 
+此处, 我们采用文献~\cite{Carleo_2017}的策略, 
+\[ S(n) \leftarrow S(n) + \lambda(n) \mathcal{I} \qquad{} \text{with } \lambda(n) = \max{(100\times0.9^n, 10^{-4})}\,, \]
+$\lambda(n)$所涉及的参数($100, 0.9, 10^{-4}$)皆可随需要进行调整. 
 显然, 随机重构的更新规则需要我们计算$S$与$f$, 而这两个量的计算可以利用上一小节中的采样方案来实现. 
 为此, 我们给出相关局部量的表达式,
 \begin{align}
@@ -123,6 +132,25 @@ H_{\rm loc}(\vec{\sigma}) & = \frac{\qbar\vec{\sigma}\rvert\hat{H}\lvert\phi\qke
 \frac{\partial\log\phi(\vec{\sigma})}{\partial b_{i}} & = \tanh{\Big(b_{i}+\sum_{j}W_{ij}\sigma_{j}\Big)} \nonumber \\
 \frac{\partial\log\phi(\vec{\sigma})}{\partial W_{ij}} & = \sigma_{j} \tanh{\Big(b_{i}+\sum_{j}W_{ij}\sigma_{j}\Big)}\,.
 \end{align}
-至此, 我们就集齐了需要的拼图!
+至此, 我们就集齐了拼图所需要的所有元素!
+
+
+\section{时间演化}
+
+除了求解多体哈密顿量的基态以外, 借助于随机重构的方法, 我们还能求解多体量子态的时间演化问题. 
+考虑到随机重构方法实际上是模拟了量子态的虚时演化, 我们只需要稍微更改一下上一节的参数更新规则就能实现量子态的实时演化, 
+\begin{equation}
+\vec{\alpha}(t+\Delta{t}) \leftarrow \vec{\alpha}(t) + i \Delta{t} S^{-1}(t)f(t)\,.
+\end{equation}
+注意, 与上一节不同的是, 对于这里的矩阵$S$, 我们不能再用任何的正规化程序, 并且每一次的参数更新的时间步长$\Delta{t}$要足够得短. 
+
+
+\section{示范代码}
+
+在托管网站GitHub上, 我们提供了用神经网络量子态求解多体哈密顿量基态的示范代码: \url{https://github.com/Qqamber/RBM-GroundStateSolver}.
+
+
+\bibliography{manuscript}
+
 
 \end{document}
