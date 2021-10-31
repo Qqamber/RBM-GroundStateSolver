@@ -145,6 +145,44 @@ H_{\rm loc}(\vec{\sigma}) & = \frac{\qbar\vec{\sigma}\rvert\hat{H}\lvert\phi\qke
 注意, 与上一节不同的是, 对于这里的矩阵$S$, 我们不能再用任何的正规化程序, 并且每一次的参数更新的时间步长$\Delta{t}$要足够得短. 
 
 
+\section{对称性的考虑}
+
+在具体的物理问题中, 如果我们能事先考虑到问题所涉及的对称性, 那我们将能大大地化简所面对的复杂性. 
+假设我们所考虑的多体问题的哈密顿量具有一定的对称性, 并且这些对称性可以用对自旋构型的线性变换来描述, 我们记
+\[ \mathcal{T}_{s}[\vec{\sigma}]=\vec{\sigma}^{s}, \qquad{} s=1,2,\cdots,S\,. \]
+比如, 对于一个有平移对称性的哈密顿量而言, 我们有$\mathcal{T}_{s}$为自旋构型的平移算符, 并且这些算符的数目为$S=N$. 
+现在, 我们需要来构造一个在任意$\mathcal{T}_{s}$作用下保持不变的变分波函数$\Psi(\mathcal{T}_{s}[\vec{\sigma}])=\Psi(\vec{\sigma})$. 
+为此, 我们定义如下变分波函数, 
+\begin{align}
+\Psi(\vec{\sigma}) & = \sum_{\{\chi_{s}^{f}\}} \exp{\Big( \sum_{f,j}a_{j}^{f}\sum_{s}\sigma_{j}^{s} + \sum_{f,s}b^{f}\chi_{s}^{f} 
++ \sum_{f,s}\chi_{s}^{f}\sum_{j}W_{j}^{f}\sigma_{j}^{s} \Big)} \\
+& = \exp{\Big(\sum_{f,j}a_{j}^{f}\sum_{s}\sigma_{j}^{s}\Big)} 
+\times \prod_{f}\prod_{s}2\cosh\Big(b^{f}+\sum_{j}W_{j}^{f}\sigma_{j}^{s}\Big)\,, 
+\end{align}
+其中, $f=1,2,\cdots,N_{f}$, 标记了不同的特征过滤器(Feature Filter). 
+接着, 我们来证明一下该拟设满足我们的要求,
+\begin{align}
+\Psi(\mathcal{T}_{t}[\vec{\sigma}]) & = \exp{\Big(\sum_{f,s}\vec{a}^{f}\cdot\mathcal{T}_{s}[\mathcal{T}_{t}[\vec{\sigma}]]\Big)} 
+\times \prod_{f,s} 2 \cosh{\Big(b^{f}+\vec{W}^{f}\cdot\mathcal{T}_{s}[\mathcal{T}_{t}[\vec{\sigma}]]\Big)} = \Psi(\vec{\sigma})\,.
+\end{align}
+最后, 我们再来看一下这个拟设所包含的变分参数的数目: 显示层的偏置有$N_{f}\times N$个, 隐藏层的偏置有$N_{f}$个, 而关联权重有$N_{f}\times N$个. 
+显然, 我们在显示层的偏置上用了和编码关联的权重一样多的变分参数, 这是很浪费的! 
+为此, 我们设置$a_{j}^{f}\equiv a^{f}$. 
+在这个基础上, 我们可以进一步地将$\sum_{f}a^{f}$打包为一个变分参数$a$. 
+这样我们就大大地缩减了原先定义的拟设的变分参数的数目. 
+我们最后的变分波函数的形式为,
+\[ \Psi(\vec{\sigma}) = \exp{\Big(a\sum_{s,j}\sigma_{j}^{s}\Big)} \times \prod_{f}\prod_{s} 
+2\cosh{\Big(b^{f}+\sum_{j}W_{j}^{f}\sigma_{j}^{s}\Big)}\,. \]
+为了方便查阅, 我们同样给出变分波函数关于参数的对数求导的表达式,
+\begin{align}
+\frac{\partial\log\Psi(\vec{\sigma})}{\partial a} & = \sum_{s,j}\sigma_{j}^{s} \nonumber \\
+\frac{\partial\log\Psi(\vec{\sigma})}{\partial b^{f}} & 
+= \sum_{s} \tanh{\Big(b^{f}+\sum_{j}W_{j}^{f}\sigma_{j}^{s}\Big)} \nonumber \\
+\frac{\partial\log\Psi(\vec{\sigma})}{\partial W_{j}^{f}} & 
+= \sum_{s}\sigma_{j}^{s}\tanh{\Big(b^{f}+\sum_{j'}W_{j'}^{f}\sigma_{j'}^{s}\Big)}\,.
+\end{align}
+
+
 \section{示范代码}
 
 在托管网站GitHub上, 我们提供了用神经网络量子态求解多体哈密顿量基态的示范代码: \url{https://github.com/Qqamber/RBM-GroundStateSolver}.
